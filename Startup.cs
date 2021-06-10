@@ -1,21 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
+using Medallion.Threading.Redis;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using RedLockNet;
-using RedLockNet.SERedis;
-using RedLockNet.SERedis.Configuration;
+using StackExchange.Redis;
 using webapi.Data;
+using webapi.Services;
 
 namespace webapi
 {
@@ -32,17 +24,10 @@ namespace webapi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = "localhost:6379";
-            });
 
-            services.AddSingleton<IDistributedLockFactory, RedLockFactory>(x =>
-                RedLockFactory.Create(new List<RedLockEndPoint>()
-            {
-                new DnsEndPoint("localhost", 6379)
-            }));
-
+            var connection = ConnectionMultiplexer.Connect("localhost:6379");
+            services.AddSingleton(_ => new RedisDistributedSynchronizationProvider(connection.GetDatabase()));
+            services.AddTransient<ProductManagement>();
 
             services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase(databaseName: "testdb"));
         }
