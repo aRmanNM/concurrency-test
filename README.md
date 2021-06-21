@@ -2,7 +2,7 @@
 
 #### script to run concurrent requests:
 ```bash
- ab -n 1 -c 1
+ ab -n 1 -c 1 <request_url>
 ```
 
 #### api endpoints
