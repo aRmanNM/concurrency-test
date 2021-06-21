@@ -10,13 +10,13 @@ namespace webapi.Data
         }
 
         public DbSet<Product> Products { get; set; }
-        public DbSet<Buyer> Buyers { get; set; }
+        public DbSet<ProductSale> ProductSales { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<Product>().HasData(
-                new Product { Id = 1, Name = "p1", Count = 5},
-                new Product { Id = 2, Name = "p2", Count = 10}
+                new Product { Id = 1, Name = "p1", Quantity = 5 },
+                new Product { Id = 2, Name = "p2", Quantity = 10 }
             );
         }
     }

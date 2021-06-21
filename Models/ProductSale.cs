@@ -1,9 +1,9 @@
 namespace webapi.Models
 {
-    public class Buyer
+    public class ProductSale
     {
         public int Id { get; set; }
         public int ProductId { get; set; }
-        public bool IsPaid { get; set; }
+        public bool Status { get; set; }
     }
 }

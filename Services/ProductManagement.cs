@@ -11,42 +11,42 @@ namespace webapi.Services
     {
         public ProductManagement(AppDbContext context, RedisDistributedSynchronizationProvider redisDistributedSynchronizationProvider)
         {
-            Context = context;
-            RedisDistributedSynchronizationProvider = redisDistributedSynchronizationProvider;
+            _context = context;
+            _redisDistributedSynchronizationProvider = redisDistributedSynchronizationProvider;
         }
 
-        public AppDbContext Context { get; }
-        public RedisDistributedSynchronizationProvider RedisDistributedSynchronizationProvider { get; }
+        public AppDbContext _context { get; }
+        public RedisDistributedSynchronizationProvider _redisDistributedSynchronizationProvider { get; }
 
-        public async Task<bool> Process(int id)
+        public async Task<bool> ProcessSale(int productId)
         {
-            var b = new Buyer();
+            var productSale = new ProductSale();
 
-            var redislock = RedisDistributedSynchronizationProvider.CreateLock($"PRODUCT_{id}");
-            using (await redislock.AcquireAsync())
-            {
-                var product = await Context.Products.Where(p => p.Id == id).FirstOrDefaultAsync();
+            // var redislock = _redisDistributedSynchronizationProvider.CreateLock($"PRODUCT_{productId}");
+            // using (await redislock.AcquireAsync())
+            // {
+                var product = await _context.Products.Where(p => p.Id == productId).FirstOrDefaultAsync();
 
-                b.ProductId = id;
-                b.IsPaid = false;
+                productSale.ProductId = productId;
+                productSale.Status = false;
 
-                await Context.Buyers.AddAsync(b);
+                await _context.ProductSales.AddAsync(productSale);
 
-                if (product.Count > 0)
+                if (product.Quantity > 0)
                 {
-                    product.Count--;
-                    b.IsPaid = true;
+                    product.Quantity--;
+                    productSale.Status = true;
                 }
+            // }
 
-                await Context.SaveChangesAsync();
-            }
+            await _context.SaveChangesAsync();
 
-            if (b.IsPaid)
+            if (!productSale.Status)
             {
-                return true;
+                return false;
             }
 
-            return false;
+            return true;
         }
     }
 }

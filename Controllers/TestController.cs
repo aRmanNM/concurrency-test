@@ -1,53 +1,54 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using webapi.Data;
-using webapi.Models;
 using webapi.Services;
 
 namespace webapi.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
     public class TestController : ControllerBase
     {
-        public TestController(ProductManagement productManagement, AppDbContext context, ILogger<Product> logger)
+        private readonly ProductManagement _productManagement;
+        private readonly AppDbContext _context;
+        public TestController(ProductManagement productManagement, AppDbContext context)
         {
-            ProductManagement = productManagement;
-            Context = context;
-            Logger = logger;
+            _context = context;
+            _productManagement = productManagement;
         }
 
-        public ProductManagement ProductManagement { get; }
-        public AppDbContext Context { get; }
-        public ILogger Logger { get; }
-
-        [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] int id)
+        [HttpGet("buy/{productId}")]
+        public async Task<IActionResult> BuyProduct(int productId)
         {
 
-            var res = await ProductManagement.Process(id);
+            var stat = await _productManagement.ProcessSale(productId);
 
-            if (res)
+            if (stat)
             {
-                Logger.LogInformation("succeeded");
+                Console.WriteLine("bought");
             }
             else
             {
-                Logger.LogInformation("failed");
+                Console.WriteLine("Could not buy");
             }
+
 
             return Ok();
         }
 
-        [HttpGet("getbuyers")]
-        public async Task<IActionResult> GetBuyer([FromQuery] int id)
+        [HttpGet("getQuantity/{productId}")]
+        public async Task<IActionResult> GetQuantity(int productId)
         {
-            var buyers = await Context.Buyers.Where(p => p.ProductId == id).ToListAsync();
+            var product = await _context.Products
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == productId);
 
-            return Ok(buyers);
+            Console.WriteLine(product.Quantity);
+
+            return Ok();
         }
+
     }
 }
