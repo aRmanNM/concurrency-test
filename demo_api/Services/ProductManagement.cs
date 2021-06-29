@@ -9,22 +9,22 @@ namespace webapi.Services
 {
     public class ProductManagement
     {
+        private readonly AppDbContext _context;
+        private readonly RedisDistributedSynchronizationProvider _redisDistributedSynchronizationProvider;
+
         public ProductManagement(AppDbContext context, RedisDistributedSynchronizationProvider redisDistributedSynchronizationProvider)
         {
             _context = context;
             _redisDistributedSynchronizationProvider = redisDistributedSynchronizationProvider;
         }
 
-        public AppDbContext _context { get; }
-        public RedisDistributedSynchronizationProvider _redisDistributedSynchronizationProvider { get; }
-
         public async Task<bool> ProcessSale(int productId)
         {
             var productSale = new ProductSale();
 
-            // var redislock = _redisDistributedSynchronizationProvider.CreateLock($"PRODUCT_{productId}");
-            // using (await redislock.AcquireAsync())
-            // {
+            var redislock = _redisDistributedSynchronizationProvider.CreateLock($"PRODUCT_{productId}");
+            using (await redislock.AcquireAsync())
+            {
                 var product = await _context.Products.Where(p => p.Id == productId).FirstOrDefaultAsync();
 
                 productSale.ProductId = productId;
@@ -37,7 +37,7 @@ namespace webapi.Services
                     product.Quantity--;
                     productSale.Status = true;
                 }
-            // }
+            }
 
             await _context.SaveChangesAsync();
 

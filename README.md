@@ -1,6 +1,6 @@
 # concurrency-test
 
-#### script to run concurrent requests:
+#### script to run concurrent requests (used apache benchmark command):
 ```bash
  ab -n 1 -c 1 <request_url>
 ```
